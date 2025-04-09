@@ -1,0 +1,66 @@
+
+=== Processing AndyControl1.csv ===
+
+=== Loading Data ===
+Data shape: (28128, 13)
+
+=== Extracting Event Markers ===
+Found 184 event markers.
+MNE event array shape: (184, 3)
+
+=== Creating MNE Raw Object ===
+Creating RawArray with float64 data, n_channels=8, n_times=28128
+    Range : 0 ... 28127 =      0.000 ...   112.508 secs
+Ready.
+<RawArray | 8 x 28128 (112.5 s), ~1.7 MiB, data loaded>
+
+=== Filtering Raw Data ===
+Filtering raw data in 1 contiguous segment
+Setting up band-pass filter from 1 - 30 Hz
+
+FIR filter parameters
+---------------------
+Designing a one-pass, zero-phase, non-causal bandpass filter:
+- Windowed time-domain design (firwin) method
+- Hamming window with 0.0194 passband ripple and 53 dB stopband attenuation
+- Lower passband edge: 1.00
+- Lower transition bandwidth: 1.00 Hz (-6 dB cutoff frequency: 0.50 Hz)
+- Upper passband edge: 30.00 Hz
+- Upper transition bandwidth: 7.50 Hz (-6 dB cutoff frequency: 33.75 Hz)
+- Filter length: 825 samples (3.300 s)
+
+Filtering complete.
+
+=== Running ICA for Artifact Removal (Optional) ===
+Fitting ICA to data using 8 channels (please be patient, this may take a while)
+Selecting by number: 8 components
+Fitting ICA took 0.0s.
+Applying ICA to Raw instance
+    Transforming to ICA space (8 components)
+    Zeroing out 0 ICA components
+    Projecting back using 8 PCA components
+ICA complete. Using cleaned raw data for epoching.
+
+=== Creating Epochs for DelayedBeep and NonDelayedBeep ===
+Available event types: ['NonDelayedBeep']
+Not setting metadata
+60 matching events found
+No baseline correction applied
+0 projection items activated
+Using data from preloaded Raw for 60 events and 501 original time points ...
+0 bad epochs dropped
+<Epochs | 60 events (all good), -0.5 – 1.5 s (baseline off), ~1.8 MiB, data loaded,
+ 'NonDelayedBeep': 60>
+  NonDelayedBeep: 60 epochs
+
+=== Calculating Band Power (Delta and Beta) ===
+Delta-Beta ratio (first 10 epochs):
+[0.00679165 0.0108488  0.01174489 0.00558501 0.00082155 0.0007362
+ 0.02288534 0.00233903 0.0024602  0.04217757]
+
+=== Optional: ML Classification (CSP + LDA) ===
+Insufficient classes for ML classification (need at least 2 different classes).
+
+=== Visualizing Results ===
+
+=== Analysis Complete ===
