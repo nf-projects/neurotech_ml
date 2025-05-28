@@ -1,0 +1,95 @@
+function initialize(box)
+	-- Load stimulation codes
+	dofile(box:get_config("${Path_Data}") .. "/plugins/stimulation/lua-stimulator-stim-codes.lua")
+    
+	-- Experimental parameters
+	number_of_trials = 3
+	tones_per_trial = 20
+	instruction_duration = 5.0  -- seconds to show instructions
+	iti = 20.0 -- Inter-Trial Interval - seconds between the end of one trial and the beginning of the next one
+	soa = 1.0 -- Stimulus Onset Asynchrony - seconds between beeps
+    
+	-- Delay parameters
+	delay_probability = 0.2  -- 20% chance of delay
+	delay_duration = 0.3   -- 300ms delay when applied
+
+	-- Get the condition from box settings, set delay appropriately
+	condition = box:get_setting(2)
+	if string.find(condition, "^[cC]ontrol") then
+		delay_probability = 0.0
+	end
+	if string.find(condition, "^[Mm]oderate") then
+		delay_probability = 0.2
+	end
+    	
+	-- Initialize random seed
+	math.randomseed(os.time())
+end
+
+function uninitialize(box)
+	-- Clean up if needed
+end
+
+function should_apply_delay()
+	return math.random() < delay_probability
+end
+
+function process(box)
+	local t = 0 -- set time to 0
+    
+	-- Start experiment
+	box:send_stimulation(1, OVTK_StimulationId_ExperimentStart, t, 0) -- Stimulation code for the beginning of the experiment
+	
+	-- Set time to the point right after instructions end
+	t = t + instruction_duration 
+    
+	-- Run trials
+	for trial = 1, number_of_trials do
+        
+		-- Send trial start marker
+        	box:send_stimulation(1, OVTK_StimulationId_TrialStart, t, 0)
+        
+        	-- Present tones for this trial
+        	for tone = 1, tones_per_trial do
+
+			-- Increment time by the SOA
+			t = t + soa
+
+			-- Determine if the tone should be delayed
+			local delay = 0
+			if should_apply_delay() then
+				delay = delay_duration
+			end
+			
+			-- Increment time by the delay (if there was any)
+			t = t + delay
+
+			-- If the beep was delayed, send stimulation for target, otherwise mark as nontarget
+			if delay > 0 then 
+				box:send_stimulation(1, OVTK_StimulationId_Target, t, 0)
+			else
+				box:send_stimulation(1, OVTK_StimulationId_NonTarget, t, 0)
+			end
+
+        	end
+        
+        	-- Send trial end marker
+        	box:send_stimulation(1, OVTK_StimulationId_TrialStop, t, 0)
+
+
+		-- If we reached the last trial, send the ending stimulation
+		--Display thank you message for 5 seconds
+		if trial == number_of_trials then
+			box:send_stimulation(1, OVTK_GDF_End_Of_Session, t, 0)
+			t = t + 5
+		else
+		-- Otherwise, we continue
+        		-- Add inter-trial interval (using same duration as SOA)
+        		t = t + iti
+		end
+    	end
+	
+	-- End the experiment
+	box:send_stimulation(1, OVTK_StimulationId_ExperimentStop, t, 0)
+	
+end

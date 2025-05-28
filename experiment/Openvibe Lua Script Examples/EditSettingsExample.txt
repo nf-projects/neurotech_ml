@@ -1,0 +1,16 @@
+function initialize(box)
+	dofile(box:get_config("${Path_Data}") .. "/plugins/stimulation/lua-stimulator-stim-codes.lua")
+	frequency = box:get_setting(2)
+	period = .5/frequency
+end
+function uninitialize(box)
+end
+function process(box)
+	local t = 0
+	while (t<800) do
+	box:send_stimulation(1, OVTK_StimulationId_Number_1A, t, 0)
+	t = t + period
+	box:send_stimulation(1, OVTK_StimulationId_Number_1B, t, 0)
+	t = t + period
+	end
+end

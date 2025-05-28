@@ -1,0 +1,81 @@
+function initialize(box)
+    -- Load stimulation codes
+    dofile(box:get_config("${Path_Data}") .. "/plugins/stimulation/lua-stimulator-stim-codes.lua")
+    
+    -- Experimental parameters
+    number_of_trials = 3
+    tones_per_trial = 20
+    instruction_duration = 5  -- seconds to show instructions
+    
+    -- SOA (Stimulus Onset Asynchrony) parameters
+    soa_options = {0.8, 1.0, 1.2}  -- in seconds (800ms, 1000ms, 1200ms)
+    current_soa = 0
+    
+    -- Delay parameters
+    delay_probability = .2  -- 20% chance of delay
+    delay_duration = 0.150   -- 150ms delay when applied
+    
+    -- Initialize random seed
+    math.randomseed(os.time())
+end
+
+function uninitialize(box)
+    -- Clean up if needed
+end
+
+function should_apply_delay()
+    return math.random() < delay_probability
+end
+
+function get_next_soa()
+    current_soa = current_soa + 1
+    if current_soa > #soa_options then
+        current_soa = 1
+    end
+    return soa_options[current_soa]
+end
+
+function process(box)
+    local t = 0
+    
+    -- Start experiment
+    box:send_stimulation(1, OVTK_StimulationId_ExperimentStart, t, 0)
+    t = t + instruction_duration
+    
+    -- Run trials
+    for trial = 1, number_of_trials do
+        -- Get SOA for this trial
+        local current_soa = get_next_soa()
+        
+        -- Send trial start marker
+        box:send_stimulation(1, OVTK_StimulationId_TrialStart, t, 0)
+        
+        -- Present tones for this trial
+        for tone = 1, tones_per_trial do
+            -- Determine if this tone should be delayed
+            local delay = 0
+            if should_apply_delay() then
+                delay = delay_duration
+            end
+	    t = t + current_soa
+		-- Log if this was a delayed tone
+            if delay > 0 then
+                box:log("Info", string.format("Trial %d: Applied delay of %.3f seconds", trial, delay))
+                box:send_stimulation(1, OVTK_StimulationId_Target, t, 0)
+            end
+		-- Increment time by SOA plus any delay
+		t = t + delay
+            -- Send tone stimulation
+            box:send_stimulation(1, OVTK_StimulationId_Beep, t, 0)
+        end
+        
+        -- Send trial end marker
+        box:send_stimulation(1, OVTK_StimulationId_TrialStop, t, 0)
+        
+        -- Add inter-trial interval (using same duration as SOA)
+        t = t + current_soa
+    end
+    
+    -- End experiment
+    box:send_stimulation(1, OVTK_StimulationId_ExperimentStop, t, 0)
+end
